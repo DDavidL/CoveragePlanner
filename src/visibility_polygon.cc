@@ -17,6 +17,7 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <variant> // Required for std::get_if for point location result
 
 #include <CGAL/Arr_naive_point_location.h>
 #include <CGAL/Arr_segment_traits_2.h>
@@ -72,38 +73,44 @@ bool computeVisibilityPolygon(const PolygonWithHoles& pwh,
 
   VisibilityArrangement::Vertex_const_handle* v = nullptr;
   VisibilityArrangement::Halfedge_const_handle* e = nullptr;
-  VisibilityArrangement::Face_const_handle* f = nullptr;
+  VisibilityArrangement::Face_const_handle* f_ptr = nullptr; // Renamed to avoid confusion if f is used later
+  VisibilityArrangement::Vertex_const_handle* v_ptr = nullptr; // Renamed
+  VisibilityArrangement::Halfedge_const_handle* e_ptr = nullptr; // Renamed
 
   typedef VisibilityArrangement::Face_handle VisibilityFaceHandle;
   VisibilityFaceHandle fh;
   VisibilityArrangement visibility_arr;
-  if ((f = boost::get<VisibilityArrangement::Face_const_handle>(&pl_result))) {
+
+  // In CGAL 6.0, Arr_point_location_result::Type is likely std::variant
+  if ((f_ptr = std::get_if<VisibilityArrangement::Face_const_handle>(&pl_result))) {
     // Located in face.
-    fh = tev.compute_visibility(query_point, *f, visibility_arr);
-  } else if ((v = boost::get<VisibilityArrangement::Vertex_const_handle>(
-                  &pl_result))) {
+    fh = tev.compute_visibility(query_point, *f_ptr, visibility_arr);
+  } else if ((v_ptr = std::get_if<VisibilityArrangement::Vertex_const_handle>(&pl_result))) {
     // Located on vertex.
     // Search the incident halfedge that contains the polygon face.
     VisibilityArrangement::Halfedge_const_handle he = poly.halfedges_begin();
-    while ((he->target()->point() != (*v)->point()) ||
-           (he->face() != main_face)) {
-      he++;
-      if (he == poly.halfedges_end()) {
-        std::cout<<"Cannot find halfedge corresponding to vertex."<<std::endl;
-        return false;
-      }
+    // Ensure proper iteration and termination for safety
+    bool found_he = false;
+    for (size_t i = 0; i < poly.number_of_halfedges(); ++i, ++he) { // Iterate safely
+        if (he->target() == (*v_ptr) && he->face() == main_face) {
+            found_he = true;
+            break;
+        }
     }
-
+    if (!found_he) {
+        std::cout << "Cannot find halfedge corresponding to vertex." << std::endl;
+        return false;
+    }
     fh = tev.compute_visibility(query_point, he, visibility_arr);
-  } else if ((e = boost::get<VisibilityArrangement::Halfedge_const_handle>(
-                  &pl_result))) {
+  } else if ((e_ptr = std::get_if<VisibilityArrangement::Halfedge_const_handle>(&pl_result))) {
     // Located on halfedge.
     // Find halfedge that has polygon interior as face.
     VisibilityArrangement::Halfedge_const_handle he =
-        (*e)->face() == main_face ? (*e) : (*e)->twin();
+        (*e_ptr)->face() == main_face ? (*e_ptr) : (*e_ptr)->twin();
     fh = tev.compute_visibility(query_point, he, visibility_arr);
   } else {
-      std::cout<<"Cannot locate query point on arrangement."<<std::endl;
+      // This case should ideally not be reached if pl_result is a variant of the above types
+      std::cout<<"Cannot locate query point on arrangement (unknown variant state)."<<std::endl;
     return false;
   }
 

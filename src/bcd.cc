@@ -18,6 +18,7 @@
  */
 
 #include <vector>
+#include <variant> // Required for std::get_if
 
 #include "bcd.h"
 #include "cgal_comm.h"
@@ -361,27 +362,32 @@ void processEvent(const PolygonWithHoles& pwh, const VertexConstCirculator& v,
 }
 std::vector<Point_2> getIntersections(const std::list<Segment_2>& L,
                                       const Line_2& l) {
-  typedef CGAL::cpp11::result_of<Intersect_2(Segment_2, Line_2)>::type
-      Intersection;
+  // CGAL 6.0 uses std::variant for intersection results
+  // typedef CGAL::cpp11::result_of<Intersect_2(Segment_2, Line_2)>::type
+  //     Intersection; // Old way
 
-  std::vector<Point_2> intersections(L.size());
-  std::vector<Point_2>::iterator intersection = intersections.begin();
+  std::vector<Point_2> intersections_found; // Use push_back for safety
+  intersections_found.reserve(L.size()); // Optional: reserve space
+
   for (std::list<Segment_2>::const_iterator it = L.begin(); it != L.end();
        ++it) {
-    Intersection result = CGAL::intersection(*it, l);
+    auto result = CGAL::intersection(*it, l); // result is std::optional<std::variant<Point_2, Segment_2>>
     if (result) {
-      if (boost::get<Segment_2>(&*result)) {
-        *(intersection++) = it->target();
-      } else {
-        const Point_2* p = boost::get<Point_2>(&*result);
-        *(intersection++) = *p;
+      // Check the type contained in the variant
+      if (const Point_2* pt = std::get_if<Point_2>(&(*result))) {
+        intersections_found.push_back(*pt);
+      } else if (const Segment_2* seg = std::get_if<Segment_2>(&(*result))) {
+        // Original logic: if intersection is a segment (collinear overlap),
+        // use the target of the segment from list L.
+        intersections_found.push_back(it->target());
       }
     } else {
-        std::cout<<"No intersection found!"<<std::endl;
+        // It's possible there's no intersection, which is valid in many cases.
+        // std::cout<<"No intersection found for a segment!"<<std::endl; // Potentially noisy
     }
   }
 
-  return intersections;
+  return intersections_found;
 }
 
 void sortPolygon(PolygonWithHoles* pwh) {

@@ -18,6 +18,7 @@
  */
 
 #include "sweep.h"
+#include <variant> // Required for std::get_if
 #include "visibility_polygon.h"
 #include "weakly_monotone.h"
 
@@ -242,17 +243,19 @@ std::vector<Point_2> sortVerticesToLine(const Polygon_2& p, const Line_2& l) {
 
 std::vector<Point_2> findIntersections(const Polygon_2& p, const Line_2& l) {
   std::vector<Point_2> intersections;
-  typedef CGAL::cpp11::result_of<Intersect_2(Segment_2, Line_2)>::type
-      Intersection;
+  // CGAL 6.0 uses std::variant for intersection results
+  // typedef CGAL::cpp11::result_of<Intersect_2(Segment_2, Line_2)>::type
+  //     Intersection; // Old way
 
   for (EdgeConstIterator it = p.edges_begin(); it != p.edges_end(); ++it) {
-    Intersection result = CGAL::intersection(*it, l);
+    auto result = CGAL::intersection(*it, l); // result is std::optional<std::variant<Point_2, Segment_2>>
     if (result) {
-      if (const Segment_2* s = boost::get<Segment_2>(&*result)) {
-        intersections.push_back(s->source());
-        intersections.push_back(s->target());
-      } else {
-        intersections.push_back(*boost::get<Point_2>(&*result));
+      // Check the type contained in the variant
+      if (const Point_2* pt = std::get_if<Point_2>(&(*result))) {
+        intersections.push_back(*pt);
+      } else if (const Segment_2* seg = std::get_if<Segment_2>(&(*result))) {
+        intersections.push_back(seg->source());
+        intersections.push_back(seg->target());
       }
     }
   }
