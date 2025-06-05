@@ -34,7 +34,7 @@ struct NodeProperty {
   NodeProperty(const Point_2& coordinates, const Polygon_2& visibility)
       : coordinates(coordinates), visibility(visibility) {}
   Point_2 coordinates;   // The 2D coordinates.
-  Polygon_2 visibility;  // The visibile polygon from the vertex.
+  Polygon_2 visibility;  // The visible polygon from the vertex.
 };
 
 struct EdgeProperty {};
