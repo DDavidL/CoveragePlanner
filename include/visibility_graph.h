@@ -64,8 +64,8 @@ class VisibilityGraph : public GraphBase<NodeProperty, EdgeProperty> {
              const Point_2& goal, const Polygon_2& goal_visibility_polygon,
              std::vector<Point_2>* waypoints) const;
 
-  // Convenience function: addtionally adds original start and goal to shortest
-  // path, if they were outside of polygon.
+  // Convenience function: additionally inserts the original start and goal into
+  // the shortest path when they lie outside the polygon.
   bool solveWithOutsideStartAndGoal(const Point_2& start, const Point_2& goal,
                                     std::vector<Point_2>* waypoints) const;
   // Given a solution, get the concatenated 2D waypoints.
