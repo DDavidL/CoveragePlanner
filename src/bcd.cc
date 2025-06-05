@@ -376,8 +376,6 @@ std::vector<Point_2> getIntersections(const std::list<Segment_2>& L,
         const Point_2* p = boost::get<Point_2>(&*result);
         *(intersection++) = *p;
       }
-    } else {
-        std::cout<<"No intersection found!"<<std::endl;
     }
   }
 

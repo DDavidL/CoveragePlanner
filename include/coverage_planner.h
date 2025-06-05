@@ -114,10 +114,6 @@ void walkThroughGraph(std::vector<CellNode>& cell_graph, int cell_index, int& un
     }
     path.emplace_front(cell_graph[cell_index]);
 
-//    for debugging
-//    std::cout<< "cell: " <<cell_graph[cell_index].cellIndex<<std::endl;
-//
-
     CellNode neighbor;
     int neighbor_idx = INT_MAX;
 
