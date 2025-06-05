@@ -193,8 +193,12 @@ std::vector<std::map<int, std::list<Point_2 >>> calculateCellIntersections(std::
                 }
             }
 
-            auto verbose = std::unique(pts.begin(), pts.end());
-            pts.erase(verbose, pts.end());
+            // Remove duplicated intersection points. std::unique without
+            // sorting only removes consecutive duplicates, which does not work
+            // here because points may be inserted in arbitrary order.
+            Polygon_2::Traits::Less_xy_2 less_xy_2;
+            pts.sort(less_xy_2);
+            pts.unique();
             cell_intersections[i].insert(std::make_pair(cell_graph[i].neighbor_indices[j], pts));
             cell_intersections[cell_graph[i].neighbor_indices[j]].insert(std::make_pair(i, pts));
         }
