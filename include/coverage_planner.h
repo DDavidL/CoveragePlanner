@@ -9,9 +9,9 @@
 #include <iostream>
 #include <math.h>
 
-#include "opencv2/core/core.hpp"
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
 
 #include <CGAL/Boolean_set_operations_2.h>
 #include <CGAL/Surface_sweep_2_algorithms.h>
