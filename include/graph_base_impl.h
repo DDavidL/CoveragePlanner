@@ -137,8 +137,7 @@ const NodeProperty* GraphBase<NodeProperty, EdgeProperty>::getNodeProperty(
 }
 
 template <class NodeProperty, class EdgeProperty>
-const EdgeProperty*
-GraphBase<NodeProperty, EdgeProperty>::GraphBase::getEdgeProperty(
+const EdgeProperty* GraphBase<NodeProperty, EdgeProperty>::getEdgeProperty(
     const EdgeId& edge_id) const {
   if (edgePropertyExists(edge_id)) {
     return &(edge_properties_.at(edge_id));
