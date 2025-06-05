@@ -28,3 +28,6 @@ target_link_libraries(CoveragePlanner
         CGAL::CGAL_Core
         )
 
+enable_testing()
+add_subdirectory(tests)
+
